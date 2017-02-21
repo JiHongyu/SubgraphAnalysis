@@ -43,6 +43,7 @@ for x, y in product(coms_dict.keys(),coms_dict.keys()):
 
 nx.write_gexf(com_net, path='.\\result\\com_net.gexf')
 
+# 求解社团网络的中心性
 bc = nx.betweenness_centrality(com_net, weight='weight')
 pc = nx.pagerank_numpy(com_net, weight='weight')
 
@@ -50,4 +51,5 @@ data = []
 for x in coms_dict.keys():
     data.append((len(coms_dict[x]), bc[x], pc[x]))
 
+# 分析数据的相关性
 df = pd.DataFrame(data=data)
