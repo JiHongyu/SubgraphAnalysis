@@ -1,0 +1,12 @@
+.idea/
+__pycache__/
+mlcd/__pycache__/
+mnets/__pycache__/
+algos/__pycache__/
+tools/__pycache__/
+temp/
+result/
+recoord/
+*.dat
+*.gml
+*.txt
