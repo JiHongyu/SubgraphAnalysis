@@ -6,6 +6,8 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import motif_structure as ms
+from functools import partial
 
 
 def generate_random_graph_paras(graph_generator, motifs_dict, order: int, times=10):
@@ -77,8 +79,23 @@ def find_neighbor_subgraph(network, target, k=1):
 
     return network.subgraph(nodes)
 
-g = nx.Graph()
-g.add_cycle([1,2,3,4,5,6,7,8,9,0])
+g = nx.read_gexf('.\\result\\ca_f.gexf')
 
-g2 = find_neighbor_subgraph(g, 1, 2)
+nodes = g.nodes()
+
+core_nodes = set()
+
+cnt = 0
+for n in nodes:
+
+    cnt += 1
+    print(cnt)
+
+    sub_g = find_neighbor_subgraph(g, n, k=3)
+    sub_g_nodes = sub_g.nodes()
+    er_g = partial(nx.fast_gnp_random_graph, n=len(sub_g_nodes), p=0.3)
+    er_paras = generate_random_graph_paras(er_g, ms.mu4_dict, 4)
+
+
+
 
