@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
+from __future__ import division
 
 # from mlcd_interface import *
 # import mnets
 import networkx as nx
 from itertools import product, combinations
 from collections import defaultdict
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 # import pandas as pd
 # import numpy as np
 import motif_structure as ms
 from functools import partial
+import time
+import sys
+
 
 
 def find_neighbor_nodes(network, target, k=1):
@@ -23,17 +27,18 @@ def find_neighbor_nodes(network, target, k=1):
 
     # 迭代搜索
     for x in range(k+1):
+        # 保存数据
+        res.update(cur)
+
         # 搜索下一跳
         nxt = set()
         for node in cur:
-            if node not in found:
-                nxt.update(network.neighbors_iter(node))
+            nxt.update(network.neighbors_iter(node))
         # 更新搜索过得节点集
         found.update(cur)
         # 下一步迭代节点集
-        cur = nxt
-        # 保存数据
-        res.update(cur)
+        cur = nxt.difference(found)
+
     return tuple(res)
 
 
@@ -57,7 +62,7 @@ def motifs_count(graph, motifs_dict, order):
     return m_c
 
 
-def generate_random_graph_paras(graph_generator, motifs_dict, order, times=4):
+def generate_random_graph_paras(graph_generator, motifs_dict, order, times=5):
 
     '''
     参考论文：Local Topology of Social Network Based on Motif Analysis
@@ -91,14 +96,18 @@ def generate_random_graph_paras(graph_generator, motifs_dict, order, times=4):
 
 def find_optimal_motif_v1(graph, motifs_dict, order):
     t_nodes = graph.nodes()
-    er_g_f = partial(nx.fast_gnp_random_graph, n=len(t_nodes), p=0.3)
+    p = 2*graph.number_of_edges()/graph.number_of_nodes()/(graph.number_of_nodes()-1)
+    er_g_f = partial(nx.fast_gnp_random_graph, n=len(t_nodes), p=p)
     er_p = generate_random_graph_paras(er_g_f, motifs_dict, order)
 
     m_c = motifs_count(graph, motifs_dict, order)
 
     z_score = []
     for k in motifs_dict:
-        val = (m_c[k] - er_p[k][0])/er_p[k][1]
+        if abs(er_p[k][1]) < 0.001:
+            val = (m_c[k] - er_p[k][0])
+        else:
+            val = (m_c[k] - er_p[k][0])/er_p[k][1]
         z_score.append([k, val])
 
     z_score.sort(key=lambda x: x[1], reverse=True)
@@ -116,7 +125,10 @@ def find_motifs(graph, motifs_dict, order, target_mf_k):
             yield sub_n
 
 
-g = nx.read_gexf('.\\result\\ca_f.gexf')
+# g = nx.read_gexf('.\\result\\ca_f.gexf')
+g = nx.karate_club_graph()
+
+pagerank = nx.pagerank(g)
 
 motifs_dict = ms.mu3_c_dict
 order = 3
@@ -127,11 +139,13 @@ core_nodes = set()
 
 cnt = 0
 
+print('-----Initial finished----')
 for n in nodes:
 
     cnt += 1
 
     print('-----------------------------')
+    s_time = time.time()
     print('iterater %d' % cnt)
 
     neighbor_sub_g = find_neighbor_subgraph(g, n, k=2)
@@ -143,12 +157,21 @@ for n in nodes:
     opt_z = find_optimal_motif_v1(
         neighbor_sub_g, motifs_dict, order
     )
-    print('%s, %d' % (opt_z[0], opt_z[1]))
+    print('Motif: %s, Z-Score: %.4f' % (opt_z[0], opt_z[1]))
 
     print('find motif nodes')
+    best_motif_nodes = None
+    best_motif_val = -1
     for m_nodes in find_motifs(neighbor_sub_g,
                              motifs_dict, order, opt_z[0]):
-        core_nodes.update(m_nodes)
+        val = sum((pagerank[x] for x in m_nodes))
+        if val > best_motif_val:
+            best_motif_nodes = m_nodes
+            best_motif_val = val
+    core_nodes.update(best_motif_nodes)
+    e_time = time.time()
+
+    print('Spend time %.3f' % (e_time-s_time))
 
 core_g = g.subgraph(core_nodes)
 
