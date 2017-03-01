@@ -14,6 +14,9 @@ mu3_2.add_edges_from([(0, 1), (1, 2), (2, 0)])
 mu3_list = [mu3_0, mu3_1, mu3_2]
 mu3_dict = {x.name: x for x in mu3_list}
 
+mu3_c_list = [mu3_1, mu3_2]
+mu3_c_dict = {x.name: x for x in mu3_c_list}
+
 # 4阶无向 Motif
 mu4_0 = nx.Graph(name='mu4_0')
 mu4_0.add_edge(1, 2)
