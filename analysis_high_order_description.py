@@ -62,7 +62,7 @@ def motifs_count(graph, motifs_dict, order):
     return m_c
 
 
-def generate_random_graph_paras(graph_generator, motifs_dict, order, times=5):
+def generate_random_graph_paras(graph_generator, motifs_dict, order, times=10):
 
     '''
     参考论文：Local Topology of Social Network Based on Motif Analysis
@@ -130,8 +130,9 @@ g = nx.karate_club_graph()
 
 pagerank = nx.pagerank(g)
 
-motifs_dict = ms.mu3_c_dict
-order = 3
+motifs_dict = ms.mu4_c_dict
+order = 4
+neighbor_order = 2
 
 nodes = g.nodes()
 
@@ -148,7 +149,7 @@ for n in nodes:
     s_time = time.time()
     print('iterater %d' % cnt)
 
-    neighbor_sub_g = find_neighbor_subgraph(g, n, k=2)
+    neighbor_sub_g = find_neighbor_subgraph(g, n, k=neighbor_order)
 
     print('nodes: %s, edges: %s' % (neighbor_sub_g.number_of_nodes(),
                                     neighbor_sub_g.number_of_edges())
@@ -173,9 +174,26 @@ for n in nodes:
 
     print('Spend time %.3f' % (e_time-s_time))
 
-core_g = g.subgraph(core_nodes)
+g2 = g.subgraph(core_nodes)
 
-nx.write_gexf(core_g, '.\\result\\ca_f_core1.gexf')
+for n in g.nodes():
+    g.node[n]['motif'] = 'non-core'
+    g.node[n]['pagerank'] = 'non-core'
+
+for n in g2.nodes():
+    g.node[n]['motif'] = 'core'
+
+pagerank_list = list(pagerank.items())
+pagerank_list.sort(key=lambda x:x[1],reverse=True)
+
+pagerank_nodes = [x[0] for x in pagerank_list[:len(g2.nodes())]]
+
+for n in pagerank_nodes:
+    g.node[n]['pagerank'] = 'core'
+
+nx.write_gexf(g, '.\\result\\karate_orignal.gexf')
+nx.write_gexf(g2, '.\\result\\karate_motif_core.gexf')
+nx.write_gexf(g.subgraph(pagerank_nodes), '.\\result\\karate_pagerank_core.gexf')
 
 
 
