@@ -75,6 +75,3 @@ for x in core_nodes.keys():
 
 df = pd.DataFrame(data=ms_cnt)
 
-
-
-

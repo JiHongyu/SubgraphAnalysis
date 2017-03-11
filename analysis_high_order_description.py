@@ -8,7 +8,7 @@ from itertools import product, combinations
 from collections import defaultdict
 import matplotlib.pyplot as plt
 # import pandas as pd
-# import numpy as np
+import numpy as np
 import motif_structure as ms
 from functools import partial
 import time
@@ -61,8 +61,19 @@ def motifs_count(graph, motifs_dict, order):
                 break
     return m_c
 
+def motifs_count_v2(graph, motifs_dict, order):
+    m_c = {x: [] for x in motifs_dict.keys()}
+    t_nodes = graph.nodes()
+    for sub_nodes in combinations(t_nodes, order):
+        sub_g = graph.subgraph(sub_nodes)
+        for key in motifs_dict.keys():
+            motif = motifs_dict[key]
+            if nx.is_isomorphic(sub_g, motif):
+                m_c[key].append(sub_nodes)
+                break
+    return m_c
 
-def generate_random_graph_paras(graph_generator, motifs_dict, order, times=10):
+def generate_random_graph_paras(graph_generator, motifs_dict, order, times):
 
     '''
     参考论文：Local Topology of Social Network Based on Motif Analysis
@@ -90,15 +101,16 @@ def generate_random_graph_paras(graph_generator, motifs_dict, order, times=10):
         val_seq = all_val_seq[key]
         res[key][0] = sum(val_seq)/times
         res[key][1] = sum((x**2 for x in val_seq))/times - res[key][0]
+        res[key][1] = np.sqrt(res[key][1])
 
     return res
 
 
-def find_optimal_motif_v1(graph, motifs_dict, order):
+def find_optimal_motif_v1(graph, motifs_dict, order, times):
     t_nodes = graph.nodes()
     p = 2*graph.number_of_edges()/graph.number_of_nodes()/(graph.number_of_nodes()-1)
     er_g_f = partial(nx.fast_gnp_random_graph, n=len(t_nodes), p=p)
-    er_p = generate_random_graph_paras(er_g_f, motifs_dict, order)
+    er_p = generate_random_graph_paras(er_g_f, motifs_dict, order, times)
 
     m_c = motifs_count(graph, motifs_dict, order)
 
@@ -122,82 +134,91 @@ def find_motifs(graph, motifs_dict, order, target_mf_k):
     for sub_n in combinations(t_nodes, order):
         sub_g = graph.subgraph(sub_n)
         if nx.is_isomorphic(sub_g, target_motif):
-            yield sub_n
+            yield sub_n, sub_g.edges()
 
 
-# g = nx.read_gexf('.\\result\\ca_f.gexf')
-g = nx.karate_club_graph()
+def mining_motif_core(file_adapter, selector, motifs_dict, motif_order, neighbor_order, times, start, end):
+    '''
 
-pagerank = nx.pagerank(g)
+    :param file_adapter: 文件名适配器
+    :param selector: Motif 采样选择器
+    :param motifs_dict: Motif 字典，由 motif_structure.py 内定义
+    :param motif_order: Motif 阶数
+    :param neighbor_order: 邻域子图阶数
+    :param times: 随机模拟次数
+    :param start: 起始迭代位置（闭区间）
+    :param end: 终止迭代位置（开区间）
+    :return:
+    '''
+    for x in range(start, end, 1):
 
-motifs_dict = ms.mu4_c_dict
-order = 4
-neighbor_order = 2
+        # 读入网络数据
+        g = nx.read_gexf(file_adapter % x)
+        # 计算PageRank
+        nodes_rank = selector(g)
 
-nodes = g.nodes()
+        core_edges = set()
 
-core_nodes = set()
+        # 每个节点的邻域子图计算
+        cnt = 0
+        for n in g.nodes_iter():
 
-cnt = 0
+            cnt += 1
+            print('---------------------------------------------------')
+            s_time = time.time()
+            print('processing %d/%d' % (cnt, g.number_of_nodes()))
 
-print('-----Initial finished----')
-for n in nodes:
+            # 获取邻域子图
+            neighbor_sub_g = find_neighbor_subgraph(g, n, k=neighbor_order)
+            print('nodes: %s, edges: %s' % (neighbor_sub_g.number_of_nodes(),
+                                            neighbor_sub_g.number_of_edges())
+                  )
 
-    cnt += 1
+            # 过滤与 Motif 同阶的邻域子图
+            # if neighbor_sub_g.number_of_nodes() < order + 1:
+            #     continue
 
-    print('-----------------------------')
-    s_time = time.time()
-    print('iterater %d' % cnt)
+            # 寻找最显著 Motif
+            print('Search optimal motif')
+            opt_z = find_optimal_motif_v1(
+                neighbor_sub_g, motifs_dict, motif_order, times
+            )
+            print('Motif: %s, Z-Score: %.4f' % (opt_z[0], opt_z[1]))
 
-    neighbor_sub_g = find_neighbor_subgraph(g, n, k=neighbor_order)
+            # 在显著 Motif 里面找一个最优的 Motif
+            print('find motif nodes')
+            best_motif_edges = None
+            best_motif_val = 0.0001
+            for m_nodes, m_edges in find_motifs(neighbor_sub_g,
+                                                motifs_dict, motif_order, opt_z[0]):
+                val = sum((nodes_rank[x] for x in m_nodes))
+                if val > best_motif_val:
+                    best_motif_edges = m_edges
+                    best_motif_val = val
+            if best_motif_edges is not None:
+                core_edges.update(best_motif_edges)
 
-    print('nodes: %s, edges: %s' % (neighbor_sub_g.number_of_nodes(),
-                                    neighbor_sub_g.number_of_edges())
-          )
-    print('Search optimal motif')
-    opt_z = find_optimal_motif_v1(
-        neighbor_sub_g, motifs_dict, order
-    )
-    print('Motif: %s, Z-Score: %.4f' % (opt_z[0], opt_z[1]))
+            e_time = time.time()
+            print('Spend time %.3f' % (e_time-s_time))
 
-    print('find motif nodes')
-    best_motif_nodes = None
-    best_motif_val = -1
-    for m_nodes in find_motifs(neighbor_sub_g,
-                             motifs_dict, order, opt_z[0]):
-        val = sum((pagerank[x] for x in m_nodes))
-        if val > best_motif_val:
-            best_motif_nodes = m_nodes
-            best_motif_val = val
-    core_nodes.update(best_motif_nodes)
-    e_time = time.time()
+        # 生成 Motif Core 网络，并保存
+        g_motif_core = nx.Graph()
+        g_motif_core.add_edges_from(core_edges)
+        nx.write_gexf(g_motif_core, file_adapter % (x+1))
 
-    print('Spend time %.3f' % (e_time-s_time))
+if __name__ == '__main__':
 
-g2 = g.subgraph(core_nodes)
+    # file_adapter = '.\\result\\ca_fav_motif_%d.gexf'
+    file_adapter = '.\\result\\ws_motif_%d.gexf'
+    motifs_dict = ms.mu3_c_dict
+    order = 3
+    neighbor_order = 2
 
-for n in g.nodes():
-    g.node[n]['motif'] = 'non-core'
-    g.node[n]['pagerank'] = 'non-core'
-
-for n in g2.nodes():
-    g.node[n]['motif'] = 'core'
-
-pagerank_list = list(pagerank.items())
-pagerank_list.sort(key=lambda x:x[1],reverse=True)
-
-pagerank_nodes = [x[0] for x in pagerank_list[:len(g2.nodes())]]
-
-for n in pagerank_nodes:
-    g.node[n]['pagerank'] = 'core'
-
-nx.write_gexf(g, '.\\result\\karate_orignal.gexf')
-nx.write_gexf(g2, '.\\result\\karate_motif_core.gexf')
-nx.write_gexf(g.subgraph(pagerank_nodes), '.\\result\\karate_pagerank_core.gexf')
-
-
-
-
-
-
-
+    mining_motif_core(file_adapter=file_adapter,
+                      selector=nx.pagerank,
+                      motifs_dict=ms.mu3_c_dict,
+                      motif_order=3,
+                      neighbor_order=2,
+                      times=10,
+                      start=0,
+                      end=20)

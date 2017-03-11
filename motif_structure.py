@@ -55,7 +55,7 @@ mu4_list = [mu4_0, mu4_1, mu4_2, mu4_3, mu4_4,
             mu4_5, mu4_6, mu4_7, mu4_8, mu4_9]
 mu4_dict = {x.name: x for x in mu4_list}
 
-mu4_c_list = [mu4_2, mu4_3, mu4_5, mu4_6,
+mu4_c_list = [mu4_2, mu4_3, mu4_6,
               mu4_7, mu4_8, mu4_9]
 mu4_c_dict = {x.name: x for x in mu4_c_list}
 
