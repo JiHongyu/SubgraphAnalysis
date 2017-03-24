@@ -208,8 +208,8 @@ def mining_motif_core(file_adapter, selector, motifs_dict, motif_order, neighbor
 
 if __name__ == '__main__':
 
-    centrality = nx.pagerank
-    # centrality = nx.betweenness_centrality
+    # centrality = nx.pagerank
+    centrality = nx.betweenness_centrality
     # centrality = nx.communicability_centrality
     file_adapter = '.\\result\\karate_motif_%d.gexf'
     # file_adapter = '.\\result\\ws_motif_%d.gexf'
