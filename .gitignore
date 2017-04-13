@@ -10,3 +10,5 @@ recoord/
 *.dat
 *.gml
 *.txt
+mlcd_interface.pyc
+motif_structure.pyc

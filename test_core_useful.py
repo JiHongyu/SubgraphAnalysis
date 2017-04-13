@@ -1,8 +1,12 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 from collections import defaultdict
-
+import numpy as np
+from sklearn import linear_model
 from itertools import product
+from pylab import mpl
+mpl.rcParams['font.sans-serif'] = ['simsun']  # 指定默认字体
+mpl.rcParams['axes.unicode_minus'] = False  # 解决保存图像是负号'-'显示为方块的问题
 
 
 def core_useful(g, g_core):
@@ -21,24 +25,78 @@ def core_useful(g, g_core):
     return w
 
 
-def net_degree(g):
-    ori_degree = g.degree().items()
+def net_degree_distribution(g):
+    ori_degree = g.degree()
     degree = defaultdict(int)
     for k in ori_degree:
-        pass
-    pass
+        degree[ori_degree[k]] += 1
+    degree_distri = list(degree.items())
+    degree_distri.sort(key=lambda x:x[0])
+    x = [x[0] for x in degree_distri if x[0] != 0]
+    y = [x[1] for x in degree_distri if x[0] != 0]
+    logx = np.log2(x)
+    logy = np.log2(y)
+    plt.scatter(logx, logy)
+    return degree_distri
 
-g = nx.read_gexf(r'./result/ca_fav_motif_betweenness/ca_fav_motif_0.gexf')
-g1= nx.read_gexf(r'./result/ca_fav_motif_betweenness/ca_fav_motif_1.gexf')
+def linear_regress(degree_distri):
 
-pr = nx.betweenness_centrality(g)
+    x = [x[0] for x in degree_distri if x[0] != 0]
+    y = [x[1] for x in degree_distri if x[0] != 0]
+    logx = np.log2(x)
+    logy = np.log2(y)
+    xdata = [[x] for x in logx]
+    ydata = [[y] for y in logy]
+    reg = linear_model.LinearRegression()
+    reg.fit(xdata, ydata)
+    pred_y = reg.predict(xdata)
+    print('实验结论')
+    print(reg.coef_)
+    print(reg.residues_)
+    print(reg.intercept_)
+    plt.plot(logx, pred_y, '--', color='red', linewidth=1)
+    threshold = [x for x in range(8)]
+    group_labels = [2**x for x in threshold]
+    plt.xticks(threshold, group_labels, rotation=0)
+    ylist = [x for x in range(0,10,2)]
+    plt.yticks([x for x in ylist], [2**x for x in ylist], rotation=0)
+g = nx.read_gexf(r'./result/ca_fav_motif_4/ca_fav_motif_0.gexf')
+g1= nx.read_gexf(r'./result/ca_fav_motif_4/ca_fav_motif_1.gexf')
+
+# pr = nx.betweenness_centrality(g)
+pr = nx.pagerank(g)
 pr_list = list(pr.items())
 pr_list.sort(key=lambda x:x[1],reverse=True)
 nodes = [x[0] for x in pr_list[:g1.number_of_nodes()]]
 g2 = g.subgraph(nodes)
 
+nx.write_gexf(g2, r'./result/ca_fav_top_pagerank.gexf')
 w1 = core_useful(g, g1)
 w2 = core_useful(g, g2)
 
 print(w1)
 print(w2)
+
+plt.figure(1, figsize=(4, 3))
+d = net_degree_distribution(g=g)
+linear_regress(d[2:-4])
+# linear_regress(d[1:])
+plt.xlabel('节点度', fontsize=12)
+plt.ylabel('度分布数量', fontsize=12)
+plt.savefig(r'./result/ca_fav_d1.pdf')
+
+plt.figure(2, figsize=(4, 3))
+d = net_degree_distribution(g=g1)
+linear_regress(d[1:-7])
+plt.xlabel('节点度', fontsize=12)
+plt.ylabel('度分布数量', fontsize=12)
+plt.savefig(r'./result/ca_fav_d2.pdf')
+
+
+plt.figure(3, figsize=(4, 3))
+d = net_degree_distribution(g=g2)
+linear_regress(d[2:-6])
+plt.xlabel('节点度', fontsize=12)
+plt.ylabel('度分布数量', fontsize=12)
+plt.savefig(r'./result/ca_fav_d3.pdf')
+plt.show()

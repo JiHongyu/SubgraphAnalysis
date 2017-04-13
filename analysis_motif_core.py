@@ -32,20 +32,22 @@ from collections import defaultdict
 # top_core_k = core_node[0][1]
 # top_core = [x for x, y in core_node if y == top_core_k]
 
-file_adapter = 'pw_motif_%d.gexf'
+file_adapter = 'ca_fav_motif_%d.gexf'
 
 g1 = nx.read_gexf(file_adapter % 0)
 
 for n in g1.nodes():
     g1.node[n]['sample'] = 0
-for x in range(1, 100):
+for x in range(2):
     if not os.path.exists(file_adapter % x):
         break
     gx = nx.read_gexf(file_adapter % x)
     for n in gx.nodes():
         g1.node[n]['sample'] = x
+    for a, b in gx.edges():
+        g1.edge[a][b]['sample'] = x
 
-nx.write_gexf(g1, 'pw_motif_core_aly.gexf')
+nx.write_gexf(g1, 'ca_motif_core_aly.gexf')
 
 
 

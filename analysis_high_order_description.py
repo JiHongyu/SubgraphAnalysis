@@ -13,6 +13,7 @@ import motif_structure as ms
 from functools import partial
 import time
 import sys
+import os
 
 
 
@@ -125,6 +126,27 @@ def find_optimal_motif_v1(graph, motifs_dict, order, times):
     z_score.sort(key=lambda x: x[1], reverse=True)
     return z_score[0]
 
+def find_optimal_motif_v2(graph, motifs_dict, order, times):
+
+    # 节点索引
+    idx = dict()
+    cnt = 0
+    for x in graph.nodes_iter():
+        idx[x] = cnt
+        cnt += 1
+
+    with open(r'./temp/fanmod.txt', 'w') as f:
+        for x, y in graph.edges_iter():
+            f.write('%s %s\n' % (idx[x], idx[y]))
+
+
+    paras = '%s 100000 1 %s 0 0 0  2 0 0 0 %s 3 3 %s 0 0'% (
+        order, r'./temp/fanmod.txt', times, r'./temp/fanmod.txt.csv'
+    )
+
+    os.system('fanmod %s' % paras)
+
+
 
 def find_motifs(graph, motifs_dict, order, target_mf_k):
 
@@ -135,6 +157,21 @@ def find_motifs(graph, motifs_dict, order, target_mf_k):
         sub_g = graph.subgraph(sub_n)
         if nx.is_isomorphic(sub_g, target_motif):
             yield sub_n, sub_g.edges()
+
+
+
+def find_opt_motif_instance(graph, motifs_dict, order, target_mf_k, nodes_rank):
+
+    t_nodes = list(graph.nodes())
+    t_nodes.sort(key=lambda x: nodes_rank[x], reverse=True)
+    target_motif = motifs_dict[target_mf_k]
+
+    for sub_n in combinations(t_nodes, order):
+        sub_g = graph.subgraph(sub_n)
+        if nx.is_isomorphic(sub_g, target_motif):
+            return sub_g.edges()
+
+    return None
 
 
 def mining_motif_core(file_adapter, selector, motifs_dict, motif_order, neighbor_order, times, start, end):
@@ -187,14 +224,7 @@ def mining_motif_core(file_adapter, selector, motifs_dict, motif_order, neighbor
 
             # 在显著 Motif 里面找一个最优的 Motif
             print('find motif nodes')
-            best_motif_edges = None
-            best_motif_val = 0.0001
-            for m_nodes, m_edges in find_motifs(neighbor_sub_g,
-                                                motifs_dict, motif_order, opt_z[0]):
-                val = sum((nodes_rank[x] for x in m_nodes))
-                if val > best_motif_val:
-                    best_motif_edges = m_edges
-                    best_motif_val = val
+            best_motif_edges = find_opt_motif_instance(neighbor_sub_g, motifs_dict, order, opt_z[0], nodes_rank)
             if best_motif_edges is not None:
                 core_edges.update(best_motif_edges)
 
