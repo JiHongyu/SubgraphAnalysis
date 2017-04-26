@@ -35,7 +35,7 @@ from itertools import product
 #
 # nx.write_gexf(g, r'./result/ca_fav_complete.gexf')
 
-g = nx.read_gexf(r'result/random_test/ws_3/ws_motif_1.gexf')
+g = nx.read_gexf(r'./result/sat_re_fa.gexf')
 
 components = nx.connected_component_subgraphs(g)
 
@@ -43,14 +43,14 @@ node_nums = []
 edge_nums = []
 data_nums = []
 components_list = [x for x in components]
-components_list.sort(key=lambda x: x.number_of_nodes(), reverse=True)
+components_list.sort(key=lambda x:x.number_of_nodes(), reverse=True)
 for subg in components_list:
-    if subg.number_of_nodes() > 5:
+    if subg.number_of_nodes() > 3:
         a = subg.number_of_nodes()
         b = subg.number_of_edges()
         node_nums.append(a)
         edge_nums.append(b)
-        data_nums.append((a, b, ))
+        data_nums.append((a,b,))
 
 xdata = [x for x in range(len(node_nums))]
 # ax = plt.figure(1)
@@ -68,5 +68,7 @@ df = pd.DataFrame(data_nums, columns=['节点','边'])
 df.plot.bar(figsize=(5, 4), log=True, fontsize=10.5)
 plt.xlabel('连通分支编号', fontsize=10.5)
 plt.ylabel('数量', fontsize=10.5)
-plt.savefig(r'./result/ws_motif_1_component.pdf')
+plt.savefig(r'./result/sat_re_fa_component.pdf')
 plt.show()
+
+g1 = components_list[0]

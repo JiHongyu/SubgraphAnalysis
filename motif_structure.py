@@ -112,6 +112,9 @@ md3_dict = {x.name: x for x in md3_list}
 
 # 4阶有向 Motif
 
+mu_adj = {'mu3_1': '001001110',
+          'mu3_2': '011101110'
+          }
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 

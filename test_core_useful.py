@@ -60,8 +60,11 @@ def linear_regress(degree_distri):
     plt.xticks(threshold, group_labels, rotation=0)
     ylist = [x for x in range(0,10,2)]
     plt.yticks([x for x in ylist], [2**x for x in ylist], rotation=0)
-g = nx.read_gexf(r'./result/ca_fav_motif_4/ca_fav_motif_0.gexf')
-g1= nx.read_gexf(r'./result/ca_fav_motif_4/ca_fav_motif_1.gexf')
+
+
+name = 'ws_motif'
+g = nx.read_gexf(r'./result/%s_0.gexf' % name)
+g1= nx.read_gexf(r'./result/%s_1.gexf' % name)
 
 # pr = nx.betweenness_centrality(g)
 pr = nx.pagerank(g)
@@ -70,7 +73,7 @@ pr_list.sort(key=lambda x:x[1],reverse=True)
 nodes = [x[0] for x in pr_list[:g1.number_of_nodes()]]
 g2 = g.subgraph(nodes)
 
-nx.write_gexf(g2, r'./result/ca_fav_top_pagerank.gexf')
+nx.write_gexf(g2, r'./result/%s_top_pagerank.gexf' % name)
 w1 = core_useful(g, g1)
 w2 = core_useful(g, g2)
 
@@ -79,18 +82,18 @@ print(w2)
 
 plt.figure(1, figsize=(4, 3))
 d = net_degree_distribution(g=g)
-linear_regress(d[2:-4])
+linear_regress(d[0:-4])
 # linear_regress(d[1:])
 plt.xlabel('节点度', fontsize=12)
 plt.ylabel('度分布数量', fontsize=12)
-plt.savefig(r'./result/ca_fav_d1.pdf')
+plt.savefig(r'./result/%s_d1.pdf' % name)
 
 plt.figure(2, figsize=(4, 3))
 d = net_degree_distribution(g=g1)
 linear_regress(d[1:-7])
 plt.xlabel('节点度', fontsize=12)
 plt.ylabel('度分布数量', fontsize=12)
-plt.savefig(r'./result/ca_fav_d2.pdf')
+plt.savefig(r'./result/%s_d2.pdf' % name)
 
 
 plt.figure(3, figsize=(4, 3))
@@ -98,5 +101,5 @@ d = net_degree_distribution(g=g2)
 linear_regress(d[2:-6])
 plt.xlabel('节点度', fontsize=12)
 plt.ylabel('度分布数量', fontsize=12)
-plt.savefig(r'./result/ca_fav_d3.pdf')
+plt.savefig(r'./result/%s_d3.pdf' % name)
 plt.show()

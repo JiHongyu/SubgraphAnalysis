@@ -1,9 +1,14 @@
 import networkx as nx
 
-n = 100
-m = 1
+n = 1000
+m = 2
 p = 0.3
+k = 4
+g1 = nx.powerlaw_cluster_graph(n, m, p)
+nx.write_gexf(g1, r'./result/ba_motif_0.gexf')
 
-g = nx.powerlaw_cluster_graph(n, m, p)
+g2 = nx.watts_strogatz_graph(n, k, 0.2)
+nx.write_gexf(g2, r'./result/ws_motif_0.gexf')
 
-nx.write_gexf(g, r'./result/ba_2.gexf')
+print(g1.number_of_edges())
+print(g2.number_of_edges())
