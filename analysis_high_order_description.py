@@ -282,7 +282,7 @@ def mining_motif_core(file_adapter, selector, motifs_dict, motif_order, neighbor
             # if neighbor_sub_g.number_of_nodes() < order + 1:
             #     continue
 
-            if neighbor_sub_g.number_of_nodes() < 30:
+            if neighbor_sub_g.number_of_nodes() < 21:
                 mc_func = motifs_count
                 find_opt_motif_instance_func = find_opt_motif_instance
             else:
@@ -315,17 +315,17 @@ if __name__ == '__main__':
     centrality = nx.pagerank
     # centrality = nx.betweenness_centrality
     # centrality = nx.communicability_centrality
-    file_adapter = '.\\result\\sat_re_fa_p_motif_%d.gexf'
+    file_adapter = '.\\result\\ca_fav_motif_%d.gexf'
     # file_adapter = '.\\result\\ws_motif_%d.gexf'
-    motifs_dict = ms.mu3_c_dict
-    order = 3
-    neighbor_order = 2
+    motifs_dict = ms.mu4_c_dict
+    order = 4
+    neighbor_order = 3
 
     mining_motif_core(file_adapter=file_adapter,
                       selector=centrality,
-                      motifs_dict=ms.mu3_c_dict,
-                      motif_order=3,
-                      neighbor_order=2,
-                      times=20,
+                      motifs_dict=motifs_dict,
+                      motif_order=order,
+                      neighbor_order=neighbor_order,
+                      times=15,
                       start=0,
                       end=20)

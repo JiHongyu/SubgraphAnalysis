@@ -1,6 +1,6 @@
 import networkx as nx
 
-g = nx.read_gexf(r'./result/sat_re_fa_p_motif_0.gexf')
+g = nx.read_gexf(r'./result/ba_motif_0.gexf')
 
 idx = dict()
 

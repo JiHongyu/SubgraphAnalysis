@@ -55,7 +55,7 @@ mu4_list = [mu4_0, mu4_1, mu4_2, mu4_3, mu4_4,
             mu4_5, mu4_6, mu4_7, mu4_8, mu4_9]
 mu4_dict = {x.name: x for x in mu4_list}
 
-mu4_c_list = [mu4_2, mu4_3, mu4_6,
+mu4_c_list = [mu4_3, mu4_5, mu4_6,
               mu4_7, mu4_8, mu4_9]
 mu4_c_dict = {x.name: x for x in mu4_c_list}
 
@@ -113,7 +113,13 @@ md3_dict = {x.name: x for x in md3_list}
 # 4阶有向 Motif
 
 mu_adj = {'mu3_1': '001001110',
-          'mu3_2': '011101110'
+          'mu3_2': '011101110',
+          'mu4_3': '0010000110010110',
+          'mu4_5': '0001000100011110',
+          'mu4_6': '0110100110010110',
+          'mu4_7': '0001001101011110',
+          'mu4_8': '0011001111011110',
+          'mu4_9': '0111101111011110'
           }
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
