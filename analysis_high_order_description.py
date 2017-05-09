@@ -158,7 +158,7 @@ def generate_random_graph_paras(graph_generator, mc_func, motifs_dict, order, ti
     for key in motifs_dict.keys():
         val_seq = all_val_seq[key]
         res[key][0] = sum(val_seq)/times
-        res[key][1] = sum((x**2 for x in val_seq))/times - res[key][0]
+        res[key][1] = sum((x**2 for x in val_seq))/times - res[key][0]*res[key][0]
         res[key][1] = np.sqrt(res[key][1])
 
     return res
@@ -282,7 +282,7 @@ def mining_motif_core(file_adapter, selector, motifs_dict, motif_order, neighbor
             # if neighbor_sub_g.number_of_nodes() < order + 1:
             #     continue
 
-            if neighbor_sub_g.number_of_nodes() < 21:
+            if neighbor_sub_g.number_of_nodes() < 20:
                 mc_func = motifs_count
                 find_opt_motif_instance_func = find_opt_motif_instance
             else:
@@ -315,17 +315,17 @@ if __name__ == '__main__':
     centrality = nx.pagerank
     # centrality = nx.betweenness_centrality
     # centrality = nx.communicability_centrality
-    file_adapter = '.\\result\\ca_fav_motif_%d.gexf'
+    file_adapter = '.\\result\\ba_motif_%d.gexf'
     # file_adapter = '.\\result\\ws_motif_%d.gexf'
-    motifs_dict = ms.mu4_c_dict
-    order = 4
-    neighbor_order = 3
+    motifs_dict = ms.mu3_c_dict
+    order = 3
+    neighbor_order = 1
 
     mining_motif_core(file_adapter=file_adapter,
                       selector=centrality,
                       motifs_dict=motifs_dict,
                       motif_order=order,
                       neighbor_order=neighbor_order,
-                      times=15,
+                      times=20,
                       start=0,
                       end=20)
